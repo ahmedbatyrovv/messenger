@@ -6,7 +6,7 @@ import { Instagram, Eye, EyeOff } from "lucide-react";
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(true);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { setCurrentUser, users } = useStore();
