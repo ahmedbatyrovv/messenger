@@ -3,6 +3,7 @@ export interface User {
   username: string;
   fullName: string;
   avatar: string;
+email: string;
   isOnline: boolean;
 }
 

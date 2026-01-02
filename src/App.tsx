@@ -1,8 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useStore } from './store/useStore';
+
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+
 import Login from './pages/Login';
+import Register from './pages/Register'; // ← ЭТОГО НЕ БЫЛО! Добавляем импорт
 import Home from './pages/Home';
 import Search from './pages/Search';
 import Chats from './pages/Chats';
@@ -18,10 +21,19 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Страница логина */}
         <Route
           path="/login"
           element={currentUser ? <Navigate to="/" replace /> : <Login />}
         />
+
+        {/* Страница регистрации — ТЕПЕРЬ ЕСТЬ! */}
+        <Route
+          path="/register"
+          element={currentUser ? <Navigate to="/" replace /> : <Register />}
+        />
+
+        {/* Защищённые роуты (требуют авторизации) */}
         <Route
           path="/"
           element={
@@ -39,6 +51,9 @@ function App() {
           <Route path="create" element={<Create />} />
           <Route path="profile" element={<Profile />} />
         </Route>
+
+        {/* Любой неизвестный путь → на главную (или можно на 404) */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
