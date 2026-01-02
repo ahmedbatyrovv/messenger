@@ -1,64 +1,62 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useStore } from "../store/useStore";
-import { Instagram, Eye, EyeOff } from "lucide-react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useStore } from '../store/useStore';
+import { Instagram, Eye, EyeOff } from 'lucide-react';
 
 export default function Register() {
-  const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(true);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // ← скрыт по умолчанию
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // ← скрыт
+  const [error, setError] = useState('');
 
   const navigate = useNavigate();
   const { users, addUser, setCurrentUser } = useStore();
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
-    // Валидация
     if (!email || !fullName || !username || !password || !confirmPassword) {
-      setError("Please fill in all fields");
+      setError('Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError('Passwords do not match');
       return;
     }
 
     if (users.some((u) => u.username === username)) {
-      setError("Username already taken");
+      setError('Username already taken');
       return;
     }
 
     if (users.some((u) => u.email === email)) {
-      setError("Email already registered");
+      setError('Email already registered');
       return;
     }
 
-    // Создаём нового пользователя
     const newUser = {
       id: Date.now().toString(),
       email,
       fullName,
       username,
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
+      isOnline: true,
     };
 
     addUser(newUser);
 
-    // Автоматически логиним
     setCurrentUser({
       ...newUser,
-      id: "current",
+      id: 'current',
     });
 
-    navigate("/");
+    navigate('/');
   };
 
   return (
@@ -70,7 +68,7 @@ export default function Register() {
           </div>
 
           <h1 className="text-2xl font-semibold text-white text-center mb-8">
-            Sign Up for Messenger
+            Sign Up for TCLab's Messenger
           </h1>
 
           <form onSubmit={handleRegister} className="space-y-4">
@@ -99,14 +97,14 @@ export default function Register() {
                 type="text"
                 placeholder="@username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))}
+                onChange={(e) => setUsername(e.target.value.replace(/\s/g, ''))}
                 className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
               />
             </div>
 
             <div className="relative">
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -117,13 +115,13 @@ export default function Register() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-200"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
             </div>
 
             <div className="relative">
               <input
-                type={showConfirmPassword ? "text" : "password"}
+                type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -134,7 +132,7 @@ export default function Register() {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-200"
               >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showConfirmPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
             </div>
 
@@ -152,9 +150,9 @@ export default function Register() {
 
           <div className="mt-6 text-center">
             <p className="text-zinc-400 text-sm">
-              Already have an account?{" "}
+              Already have an account?{' '}
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => navigate('/login')}
                 className="text-blue-500 hover:underline"
               >
                 Log in

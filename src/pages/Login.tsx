@@ -1,38 +1,39 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useStore } from "../store/useStore";
-import { Instagram, Eye, EyeOff } from "lucide-react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useStore } from '../store/useStore';
+import { Instagram, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(true);
-  const [error, setError] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // ← скрыт по умолчанию
+  const [error, setError] = useState('');
+
   const navigate = useNavigate();
-  const { setCurrentUser, users } = useStore();
+  const { users, setCurrentUser } = useStore();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (!username || !password) {
-      setError("Please enter username and password");
+      setError('Please enter username and password');
       return;
     }
 
     const user = users.find((u) => u.username === username);
 
     if (!user) {
-      setError("User not found");
+      setError('User not found');
       return;
     }
 
     setCurrentUser({
       ...user,
-      id: "current",
+      id: 'current',
     });
 
-    navigate("/");
+    navigate('/');
   };
 
   return (
@@ -44,7 +45,7 @@ export default function Login() {
           </div>
 
           <h1 className="text-2xl font-semibold text-white text-center mb-8">
-            Messenger
+            Login for TCLab's Messenger
           </h1>
 
           <form onSubmit={handleLogin} className="space-y-4">
@@ -60,7 +61,7 @@ export default function Login() {
 
             <div className="relative">
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -71,7 +72,7 @@ export default function Login() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-200"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
             </div>
 
@@ -89,9 +90,9 @@ export default function Login() {
 
           <div className="mt-6 text-center">
             <p className="text-zinc-400 text-sm">
-              Don't have an account?{" "}
+              Don't have an account?{' '}
               <button
-                onClick={() => navigate("/register")}
+                onClick={() => navigate('/register')}
                 className="text-blue-500 hover:underline"
               >
                 Sign up
