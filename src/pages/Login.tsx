@@ -1,37 +1,38 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useStore } from '../store/useStore';
-import { Instagram } from 'lucide-react';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useStore } from "../store/useStore";
+import { Instagram, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { setCurrentUser, users } = useStore();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!username || !password) {
-      setError('Please enter username and password');
+      setError("Please enter username and password");
       return;
     }
 
     const user = users.find((u) => u.username === username);
 
     if (!user) {
-      setError('User not found');
+      setError("User not found");
       return;
     }
 
     setCurrentUser({
       ...user,
-      id: 'current',
+      id: "current",
     });
 
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -57,14 +58,21 @@ export default function Login() {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
+                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600 pr-12"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-200"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
 
             {error && (
@@ -79,24 +87,16 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-8 pt-8 border-t border-zinc-800">
-            <p className="text-zinc-400 text-sm text-center mb-4">
-              Demo users to try:
+          <div className="mt-6 text-center">
+            <p className="text-zinc-400 text-sm">
+              Don't have an account?{" "}
+              <button
+                onClick={() => navigate("/register")}
+                className="text-blue-500 hover:underline"
+              >
+                Sign up
+              </button>
             </p>
-            <div className="space-y-2">
-              {users.slice(0, 3).map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => {
-                    setUsername(user.username);
-                    setPassword('demo');
-                  }}
-                  className="w-full text-left px-4 py-2 bg-zinc-800 hover:bg-zinc-750 rounded-lg text-zinc-300 text-sm transition-colors"
-                >
-                  {user.username}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </div>
