@@ -1,7 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import {
-  Instagram,
   Home,
   Search,
   MessageCircle,
@@ -33,79 +32,83 @@ export default function Sidebar() {
   const handleLogout = () => {
     logout();
     navigate('/login');
+    toggleMobileMenu();
+  };
+
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    toggleMobileMenu();
   };
 
   return (
     <>
-      <button
-        onClick={toggleMobileMenu}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-zinc-900 rounded-lg border border-zinc-800"
-      >
-        <Menu className="w-6 h-6 text-white" />
-      </button>
-
+      {!isMobileMenuOpen && (
+        <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
+          <button
+            onClick={toggleMobileMenu}
+            className="p-2 bg-zinc-900 rounded-lg border border-zinc-800 hover:bg-zinc-800 transition-colors"
+          >
+            <Menu className="w-6 h-6 text-white" />
+          </button>
+          <span className="text-xl font-bold text-white">Messenger</span>
+        </div>
+      )}
       <aside
         className={`
-          fixed lg:static inset-y-0 left-0 z-40
-          w-64 bg-black border-r border-zinc-900
+          fixed inset-y-0 left-0 z-40 w-72 bg-black border-r border-zinc-900
           transform transition-transform duration-300 ease-in-out
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+          flex flex-col
         `}
       >
-        <div className="flex flex-col h-full p-4">
-          <div className="flex items-center gap-3 mb-8 px-2">
-            <Instagram className="w-8 h-8 text-white" />
-            <span className="text-xl font-semibold text-white">Messenger</span>
-          </div>
-
-          <nav className="flex-1 space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-
-              return (
-                <button
-                  key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    if (isMobileMenuOpen) toggleMobileMenu();
-                  }}
-                  className={`
-                    w-full flex items-center gap-4 px-4 py-3 rounded-lg
-                    transition-colors
-                    ${
-                      isActive
-                        ? 'bg-zinc-800 text-white'
-                        : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'
-                    }
-                  `}
-                >
-                  <Icon className="w-6 h-6" />
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="border-t border-zinc-900 pt-4 mt-4">
-            <div className="flex items-center gap-3 px-4 mb-4">
+        <div className="flex flex-col h-full">
+          <div className="p-6 border-b border-zinc-900">
+            <div className="flex items-center gap-4">
               <img
-                src={currentUser?.avatar}
+                src={currentUser?.avatar || 'https://via.placeholder.com/60'}
                 alt={currentUser?.username}
-                className="w-10 h-10 rounded-full"
+                className="w-16 h-16 rounded-full ring-4 ring-zinc-800"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  {currentUser?.fullName}
+                <p className="text-lg font-semibold text-white truncate">
+                  {currentUser?.fullName || 'Guest'}
                 </p>
-                <p className="text-xs text-zinc-500 truncate">
-                  @{currentUser?.username}
+                <p className="text-sm text-zinc-400 truncate">
+                  @{currentUser?.username || 'unknown'}
                 </p>
               </div>
             </div>
+          </div>
+          <nav className="flex-1 overflow-y-auto py-4">
+            <div className="space-y-1 px-3">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => handleNavClick(item.path)}
+                    className={`
+                      w-full flex items-center gap-4 px-4 py-3 rounded-lg text-left
+                      transition-all duration-200
+                      ${
+                        isActive
+                          ? 'bg-zinc-800 text-white font-medium'
+                          : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'
+                      }
+                    `}
+                  >
+                    <Icon className="w-6 h-6 flex-shrink-0" />
+                    <span className="text-base">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+          <div className="border-t border-zinc-900 p-4">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors"
+              className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-red-400 transition-all"
             >
               <LogOut className="w-6 h-6" />
               <span className="font-medium">Log Out</span>
@@ -113,10 +116,9 @@ export default function Sidebar() {
           </div>
         </div>
       </aside>
-
       {isMobileMenuOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          className="fixed inset-0 bg-black bg-opacity-60 z-30"
           onClick={toggleMobileMenu}
         />
       )}

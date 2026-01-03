@@ -4,11 +4,14 @@ import RightSidebar from './RightSidebar';
 
 export default function Layout() {
   return (
-    <div className="flex h-screen bg-black overflow-hidden">
+    <div className="flex h-screen bg-black text-white overflow-hidden">
       <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <Outlet />
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="h-16 flex-shrink-0" />
+        <main className="flex-1 overflow-y-auto scrollbar-hide">
+          <Outlet />
+        </main>
+      </div>
       <RightSidebar />
     </div>
   );

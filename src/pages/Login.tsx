@@ -6,7 +6,7 @@ import { Instagram, Eye, EyeOff } from 'lucide-react';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // ← скрыт по умолчанию
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   const navigate = useNavigate();
@@ -16,46 +16,45 @@ export default function Login() {
     e.preventDefault();
     setError('');
 
-    if (!username || !password) {
-      setError('Please enter username and password');
+    if (!username.trim()) {
+      setError('Please enter your username');
+      return;
+    }
+    if (!password) {
+      setError('Please enter your password');
       return;
     }
 
-    const user = users.find((u) => u.username === username);
-
+    const user = users.find((u) => u.username.toLowerCase() === username.toLowerCase());
     if (!user) {
       setError('User not found');
       return;
     }
 
-    setCurrentUser({
-      ...user,
-      id: 'current',
-    });
-
+    setCurrentUser({ ...user, id: 'current' });
     navigate('/');
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-md">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 sm:p-8 shadow-2xl">
           <div className="flex justify-center mb-8">
-            <Instagram className="w-12 h-12 text-white" />
+            <Instagram className="w-14 h-14 text-white" />
           </div>
 
-          <h1 className="text-2xl font-semibold text-white text-center mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white text-center mb-8">
             Login for TCLab's Messenger
           </h1>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <input
                 type="text"
                 placeholder="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
+                className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
@@ -65,35 +64,37 @@ export default function Login() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600 pr-12"
+                className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors pr-12"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-200"
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-white transition-colors"
               >
-                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
+                {showPassword ? <Eye size={22} /> : <EyeOff size={22} />}
               </button>
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm text-center">{error}</div>
+              <div className="bg-red-900/30 border border-red-800 text-red-400 text-sm px-4 py-3 rounded-lg text-center">
+                {error}
+              </div>
             )}
 
             <button
               type="submit"
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-blue-600/30"
             >
               Log In
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-8 text-center">
             <p className="text-zinc-400 text-sm">
               Don't have an account?{' '}
               <button
                 onClick={() => navigate('/register')}
-                className="text-blue-500 hover:underline"
+                className="text-blue-500 hover:text-blue-400 font-medium underline transition-colors"
               >
                 Sign up
               </button>
