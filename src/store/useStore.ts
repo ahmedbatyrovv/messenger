@@ -67,19 +67,18 @@ export const useStore = create<AppState>()(
 
       addUser: (newUser) =>
         set((state) => {
+          const usernameLower = newUser.username.toLowerCase();
+          const emailLower = newUser.email.toLowerCase();
+
           const exists = state.users.some(
             (u) =>
-              u.username && u.username.toLowerCase() === newUser.username.toLowerCase() ||
-              u.email && u.email.toLowerCase() === newUser.email.toLowerCase()
+              u.username && u.username.toLowerCase() === usernameLower ||
+              u.email && u.email.toLowerCase() === emailLower
           );
 
-          if (exists) {
-            return state;
-          }
+          if (exists) return state;
 
-          return {
-            users: [...state.users, newUser],
-          };
+          return { users: [...state.users, newUser] };
         }),
 
       setActiveChat: (chatId) =>
@@ -163,4 +162,4 @@ export const useStore = create<AppState>()(
       }),
     }
   )
-); 
+);
