@@ -20,31 +20,47 @@ export default function Register() {
     const newErrors: Record<string, string> = {};
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) newErrors.email = 'Email is required';
-    else if (!emailRegex.test(email)) newErrors.email = 'Invalid email format';
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!emailRegex.test(email)) {
+      newErrors.email = 'Invalid email format';
+    }
 
-    if (!fullName.trim()) newErrors.fullName = 'Full name is required';
-    else if (fullName.trim().split(' ').filter(Boolean).length < 2)
-      newErrors.fullName = 'Enter first and last name';
+    if (!fullName.trim()) {
+      newErrors.fullName = 'Full name is required';
+    } else if (fullName.trim().split(' ').filter(Boolean).length < 2) {
+      newErrors.fullName = 'Please enter first and last name';
+    }
 
     const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
-    if (!username) newErrors.username = 'Username is required';
-    else if (!usernameRegex.test(username))
-      newErrors.username = 'Letters, numbers, _ only. Min 3 chars';
+    if (!username) {
+      newErrors.username = 'Username is required';
+    } else if (!usernameRegex.test(username)) {
+      newErrors.username = 'Only letters, numbers, underscore. Min 3 chars';
+    }
 
-    if (!password) newErrors.password = 'Password is required';
-    else if (password.length < 6) newErrors.password = 'Min 6 characters';
-    else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(password))
-      newErrors.password = 'Must contain letters and numbers';
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(password)) {
+      newErrors.password = 'Password must contain letters and numbers';
+    }
 
-    if (password !== confirmPassword)
+    if (password !== confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
+    }
 
-    if (users.some((u) => u.username.toLowerCase() === username.toLowerCase()))
+    const usernameLower = username.toLowerCase();
+    const emailLower = email.toLowerCase();
+
+    if (users.some((u) => u.username && u.username.toLowerCase() === usernameLower)) {
       newErrors.username = 'Username already taken';
+    }
 
-    if (users.some((u) => u.email.toLowerCase() === email.toLowerCase()))
+    if (users.some((u) => u.email && u.email.toLowerCase() === emailLower)) {
       newErrors.email = 'Email already registered';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -81,87 +97,72 @@ export default function Register() {
           </h1>
 
           <form onSubmit={handleRegister} className="space-y-5">
-            {/* Email */}
             <div>
-              <div className="relative">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
-                />
-              </div>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
+              />
               {errors.email && <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>}
             </div>
 
-            {/* Full Name */}
             <div>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
-                />
-              </div>
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
+              />
               {errors.fullName && <p className="text-red-500 text-xs mt-1.5">{errors.fullName}</p>}
             </div>
 
-            {/* Username */}
             <div>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="@username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-                  className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
-                />
-              </div>
+              <input
+                type="text"
+                placeholder="@username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+                className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
+              />
               {errors.username && <p className="text-red-500 text-xs mt-1.5">{errors.username}</p>}
             </div>
 
-            {/* Password */}
-            <div>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-white transition-colors"
-                >
-                  {showPassword ? <Eye size={22} /> : <EyeOff size={22} />}
-                </button>
-              </div>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-white transition-colors"
+              >
+                {showPassword ? <Eye size={22} /> : <EyeOff size={22} />}
+              </button>
               {errors.password && <p className="text-red-500 text-xs mt-1.5">{errors.password}</p>}
             </div>
 
-            {/* Confirm Password */}
-            <div>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-white transition-colors"
-                >
-                  {showConfirmPassword ? <Eye size={22} /> : <EyeOff size={22} />}
-                </button>
-              </div>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-3.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition-colors pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 hover:text-white transition-colors"
+              >
+                {showConfirmPassword ? <Eye size={22} /> : <EyeOff size={22} />}
+              </button>
               {errors.confirmPassword && <p className="text-red-500 text-xs mt-1.5">{errors.confirmPassword}</p>}
             </div>
 
