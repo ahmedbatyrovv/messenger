@@ -16,7 +16,7 @@ import {
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, isMobileMenuOpen, toggleMobileMenu, logout } = useStore();
+  const { currentUser, isMobileMenuOpen, toggleMobileMenu, logout, activeChat } = useStore();
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
@@ -42,18 +42,23 @@ export default function Sidebar() {
 
   return (
     <>
-      {!isMobileMenuOpen && (
-        <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
+      {/* Бургер + Messenger — видны ТОЛЬКО когда нет активного чата */}
+      {/* На мобильных скрывается в чате, на десктопе — всегда видно */}
+      {!isMobileMenuOpen && !activeChat && (
+        <div className="fixed top-4 left-4 z-50 flex items-center gap-3 lg:flex">
           <button
             onClick={toggleMobileMenu}
             className="p-2 bg-zinc-900 rounded-lg border border-zinc-800 hover:bg-zinc-800 transition-colors"
           >
             <Menu className="w-6 h-6 text-white" />
           </button>
-          <span className="text-xl font-bold text-white">Messenger</span>
+          <span className="text-xl font-bold text-white hidden sm:block">
+            Messenger
+          </span>
         </div>
       )}
 
+      {/* Боковая панель */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-40 w-72 bg-black border-r border-zinc-900
@@ -121,6 +126,7 @@ export default function Sidebar() {
         </div>
       </aside>
 
+      {/* Overlay — только на мобильных */}
       {isMobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-60 z-30"

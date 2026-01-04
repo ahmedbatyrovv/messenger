@@ -59,10 +59,9 @@ export default function ChatView() {
 
   return (
     <div className="flex-1 flex flex-col bg-black">
-      {/* Хедер чата — минимальные отступы, чистый вид */}
+      {/* Хедер чата — компактный, без лишних отступов сверху */}
       <div className="border-b border-zinc-900 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* Кнопка назад — только на мобильных */}
           <button
             onClick={() => setActiveChat(null)}
             className="lg:hidden text-zinc-400 hover:text-white"
@@ -72,7 +71,7 @@ export default function ChatView() {
           <img src={chat.avatar} alt={chat.name} className="w-10 h-10 rounded-full flex-shrink-0" />
           <div className="min-w-0">
             <h2 className="font-semibold text-white truncate">{chat.name}</h2>
-            <p className="text-xs text-zinc-500 truncate">
+            <p className="text-xs text-zinc-500">
               {chat.type === 'personal' ? 'Active now' : `${chat.participants.length} members`}
             </p>
           </div>
@@ -94,7 +93,7 @@ export default function ChatView() {
         </div>
       </div>
 
-      {/* Область сообщений — начинается сразу под хедером */}
+      {/* Область сообщений — начинается ближе к хедеру */}
       <div className="flex-1 overflow-y-auto px-4 pt-3 pb-2 space-y-4">
         {chat.messages.map((msg) => {
           const sender = getSenderInfo(msg.senderId);
@@ -143,14 +142,14 @@ export default function ChatView() {
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
               placeholder="Type a message..."
               className="flex-1 px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-full text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-700"
             />
             <button
               onClick={handleSend}
               disabled={!message.trim()}
-              className="p-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors"
+              className="p-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-full transition-colors flex-shrink-0"
             >
               <Send className="w-5 h-5 text-white" />
             </button>
