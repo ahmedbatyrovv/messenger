@@ -16,7 +16,7 @@ import {
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, isMobileMenuOpen, toggleMobileMenu, logout } = useStore();
+  const { currentUser, isMobileMenuOpen, toggleMobileMenu, logout, activeChat } = useStore();
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
@@ -32,18 +32,22 @@ export default function Sidebar() {
   const handleLogout = () => {
     logout();
     navigate('/login');
-    toggleMobileMenu();
+    if (isMobileMenuOpen) toggleMobileMenu();
   };
 
   const handleNavClick = (path: string) => {
     navigate(path);
-    toggleMobileMenu();
+    if (isMobileMenuOpen) toggleMobileMenu();
   };
+
+  // Условие: показывать топ-бар с бургером ТОЛЬКО если нет открытого чата
+  const showTopBar = !activeChat;
 
   return (
     <>
-      {!isMobileMenuOpen && (
-        <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
+      {/* Топ-бар с бургером и названием — только на мобильных и только если чат НЕ открыт */}
+      {showTopBar && !isMobileMenuOpen && (
+        <div className="fixed top-4 left-4 z-50 flex items-center gap-3 lg:hidden">
           <button
             onClick={toggleMobileMenu}
             className="p-2 bg-zinc-900 rounded-lg border border-zinc-800 hover:bg-zinc-800 transition-colors"
@@ -54,10 +58,12 @@ export default function Sidebar() {
         </div>
       )}
 
+      {/* Сайдбар */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-40 w-72 bg-black border-r border-zinc-900
           transform transition-transform duration-300 ease-in-out
+          lg:translate-x-0  /* Всегда видим на десктопе */
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
           flex flex-col
         `}
@@ -86,7 +92,6 @@ export default function Sidebar() {
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
-
                 return (
                   <button
                     key={item.path}
@@ -121,9 +126,10 @@ export default function Sidebar() {
         </div>
       </aside>
 
+      {/* Оверлей — только на мобильных */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-60 z-30"
+          className="fixed inset-0 bg-black bg-opacity-60 z-30 lg:hidden"
           onClick={toggleMobileMenu}
         />
       )}

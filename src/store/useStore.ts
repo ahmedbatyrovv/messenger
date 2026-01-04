@@ -18,6 +18,7 @@ interface AppState {
   stories: Story[];
   activeChat: string | null;
   isMobileMenuOpen: boolean;
+  isSidebarCollapsed: boolean;
 
   setCurrentUser: (user: User | null) => void;
   addUser: (user: User) => void;
@@ -28,6 +29,8 @@ interface AppState {
   markStoryAsViewed: (storyId: string, userId: string) => void;
   markChatAsRead: (chatId: string) => void;
   toggleMobileMenu: () => void;
+  toggleSidebarCollapsed: () => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   logout: () => void;
 }
 
@@ -55,13 +58,14 @@ const MOCK_STORIES: Story[] = [];
 
 export const useStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       users: MOCK_USERS,
       currentUser: null,
       chats: MOCK_CHATS,
       stories: MOCK_STORIES,
       activeChat: null,
       isMobileMenuOpen: false,
+      isSidebarCollapsed: false,
 
       setCurrentUser: (user) => set({ currentUser: user }),
 
@@ -69,15 +73,12 @@ export const useStore = create<AppState>()(
         set((state) => {
           const usernameLower = newUser.username.toLowerCase();
           const emailLower = newUser.email.toLowerCase();
-
           const exists = state.users.some(
             (u) =>
-              u.username && u.username.toLowerCase() === usernameLower ||
-              u.email && u.email.toLowerCase() === emailLower
+              u.username.toLowerCase() === usernameLower ||
+              u.email.toLowerCase() === emailLower
           );
-
           if (exists) return state;
-
           return { users: [...state.users, newUser] };
         }),
 
@@ -145,20 +146,28 @@ export const useStore = create<AppState>()(
       toggleMobileMenu: () =>
         set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),
 
+      toggleSidebarCollapsed: () =>
+        set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+
+      setSidebarCollapsed: (collapsed) =>
+        set({ isSidebarCollapsed: collapsed }),
+
       logout: () =>
         set({
           currentUser: null,
           activeChat: null,
           isMobileMenuOpen: false,
+          isSidebarCollapsed: false,
         }),
     }),
     {
-      name: 'instagram-messenger-storage',
+      name: 'messenger-storage',
       partialize: (state) => ({
         users: state.users,
         currentUser: state.currentUser,
         chats: state.chats,
         stories: state.stories,
+        isSidebarCollapsed: state.isSidebarCollapsed,
       }),
     }
   )
