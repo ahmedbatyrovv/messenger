@@ -16,7 +16,7 @@ import {
 export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, isMobileMenuOpen, toggleMobileMenu, logout, activeChat } = useStore();
+  const { currentUser, isMobileMenuOpen, toggleMobileMenu, logout } = useStore();
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
@@ -42,10 +42,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Хедер с бургером и названием */}
-      {/* На десктопе (lg и выше) — всегда видим */}
-      {/* На мобильных — только когда сайдбар закрыт */}
-      {(!isMobileMenuOpen || window.innerWidth >= 1024) && (
+      {!isMobileMenuOpen && (
         <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
           <button
             onClick={toggleMobileMenu}
@@ -57,13 +54,12 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Боковая панель */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-40 w-72 bg-black border-r border-zinc-900
           transform transition-transform duration-300 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-          flex flex-col lg:translate-x-0
+          flex flex-col
         `}
       >
         <div className="flex flex-col h-full">
@@ -84,11 +80,13 @@ export default function Sidebar() {
               </div>
             </div>
           </div>
+
           <nav className="flex-1 overflow-y-auto py-4">
             <div className="space-y-1 px-3">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
+
                 return (
                   <button
                     key={item.path}
@@ -110,6 +108,7 @@ export default function Sidebar() {
               })}
             </div>
           </nav>
+
           <div className="border-t border-zinc-900 p-4">
             <button
               onClick={handleLogout}
@@ -122,10 +121,9 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Overlay — только на мобильных */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-60 z-30 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-60 z-30"
           onClick={toggleMobileMenu}
         />
       )}
