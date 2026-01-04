@@ -18,6 +18,8 @@ export default function Sidebar() {
   const location = useLocation();
   const { currentUser, isMobileMenuOpen, toggleMobileMenu, logout, activeChat } = useStore();
 
+  const isHomePage = location.pathname === '/';
+
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Search, label: 'Search', path: '/search' },
@@ -42,10 +44,8 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Хедер с бургером и названием */}
-      {/* На мобильных — скрывается, если открыт чат (activeChat) */}
-      {/* На десктопе — всегда виден */}
-      {!isMobileMenuOpen && !(activeChat && window.innerWidth < 1024) && (
+      {/* Хедер с бургером и названием — только на Home page */}
+      {isHomePage && !isMobileMenuOpen && (
         <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
           <button
             onClick={toggleMobileMenu}
@@ -67,61 +67,79 @@ export default function Sidebar() {
         `}
       >
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-zinc-900">
-            <div className="flex items-center gap-4">
-              <img
-                src={currentUser?.avatar || 'https://via.placeholder.com/60'}
-                alt={currentUser?.username}
-                className="w-16 h-16 rounded-full ring-4 ring-zinc-800"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-lg font-semibold text-white truncate">
-                  {currentUser?.fullName || 'Guest'}
-                </p>
-                <p className="text-sm text-zinc-400 truncate">
-                  @{currentUser?.username || 'unknown'}
-                </p>
+          {/* Верх: Профиль пользователя — только на Home page */}
+          {isHomePage && (
+            <div className="p-6 border-b border-zinc-900">
+              <div className="flex items-center gap-4">
+                <img
+                  src={currentUser?.avatar || 'https://via.placeholder.com/60'}
+                  alt={currentUser?.username}
+                  className="w-16 h-16 rounded-full ring-4 ring-zinc-800"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-lg font-semibold text-white truncate">
+                    {currentUser?.fullName || 'Guest'}
+                  </p>
+                  <p className="text-sm text-zinc-400 truncate">
+                    @{currentUser?.username || 'unknown'}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <nav className="flex-1 overflow-y-auto py-4">
-            <div className="space-y-1 px-3">
+          {/* Навигация */}
+          <nav className="flex-1 py-4">
+            <div className={`space-y-1 ${isHomePage ? 'px-3' : 'px-6'}`}>
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
 
                 return (
-                  <button
+                  <div
                     key={item.path}
-                    onClick={() => handleNavClick(item.path)}
-                    className={`
-                      w-full flex items-center gap-4 px-4 py-3 rounded-lg text-left
-                      transition-all duration-200
-                      ${
-                        isActive
+                    className="relative group"
+                  >
+                    <button
+                      onClick={() => handleNavClick(item.path)}
+                      className={`
+                        w-full flex items-center gap-4 px-4 py-3 rounded-lg text-left
+                        transition-all duration-200
+                        ${isActive
                           ? 'bg-zinc-800 text-white font-medium'
                           : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'
-                      }
-                    `}
-                  >
-                    <Icon className="w-6 h-6 flex-shrink-0" />
-                    <span className="text-base">{item.label}</span>
-                  </button>
+                        }
+                        ${!isHomePage ? 'justify-center' : ''}
+                      `}
+                    >
+                      <Icon className="w-6 h-6 flex-shrink-0" />
+                      {isHomePage && <span className="text-base">{item.label}</span>}
+                    </button>
+
+                    {/* Tooltip — только на не-Home страницах */}
+                    {!isHomePage && (
+                      <div className="absolute left-full ml-2 px-3 py-2 bg-zinc-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none z-50">
+                        {item.label}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
           </nav>
 
-          <div className="border-t border-zinc-900 p-4">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-red-400 transition-all"
-            >
-              <LogOut className="w-6 h-6" />
-              <span className="font-medium">Log Out</span>
-            </button>
-          </div>
+          {/* Log Out — только на Home page */}
+          {isHomePage && (
+            <div className="border-t border-zinc-900 p-4">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-red-400 transition-all"
+              >
+                <LogOut className="w-6 h-6" />
+                <span className="font-medium">Log Out</span>
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
