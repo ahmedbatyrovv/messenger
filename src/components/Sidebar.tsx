@@ -40,10 +40,14 @@ export default function Sidebar() {
     toggleMobileMenu();
   };
 
+  // Условие показа хедера с бургером и названием:
+  // - На десктопе (lg+): всегда, если сайдбар закрыт
+  // - На мобильных: только если сайдбар закрыт И нет активного чата
+  const showHeader = !isMobileMenuOpen && (window.innerWidth >= 1024 || !activeChat);
+
   return (
     <>
-      {/* Хедер с бургером и названием — видим ТОЛЬКО если нет активного чата */}
-      {!isMobileMenuOpen && !activeChat && (
+      {showHeader && (
         <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
           <button
             onClick={toggleMobileMenu}
@@ -55,7 +59,6 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Боковая панель */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-40 w-72 bg-black border-r border-zinc-900
