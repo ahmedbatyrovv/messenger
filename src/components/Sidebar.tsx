@@ -40,13 +40,10 @@ export default function Sidebar() {
     toggleMobileMenu();
   };
 
-  // Показываем бургер и "Messenger" ТОЛЬКО если нет активного чата (т.е. на главной, где список чатов)
-  const showHeader = !activeChat;
-
   return (
     <>
-      {/* Хедер с бургером и названием — видим ТОЛЬКО на главной (когда нет активного чата) */}
-      {showHeader && !isMobileMenuOpen && (
+      {/* Хедер с бургером и названием — видим ТОЛЬКО если нет активного чата */}
+      {!isMobileMenuOpen && !activeChat && (
         <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
           <button
             onClick={toggleMobileMenu}
@@ -122,8 +119,6 @@ export default function Sidebar() {
           </div>
         </div>
       </aside>
-
-      {/* Overlay */}
       {isMobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-60 z-30"
