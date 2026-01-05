@@ -19,7 +19,7 @@ export default function ChatList({ chats }: ChatListProps) {
     <div className="flex-1 overflow-y-auto">
       {chats.length === 0 ? (
         <div className="flex items-center justify-center h-full">
-          <p className="text-zinc-500">No chats found</p>
+          <p className="text-zinc-500">No channels found</p>
         </div>
       ) : (
         <div className="divide-y divide-zinc-900">
@@ -45,7 +45,6 @@ export default function ChatList({ chats }: ChatListProps) {
                   </div>
                 )}
               </div>
-
               <div className="flex-1 min-w-0 text-left">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-semibold text-white truncate">

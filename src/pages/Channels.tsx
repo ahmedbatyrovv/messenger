@@ -13,6 +13,7 @@ export default function Channels() {
 
   return (
     <div className="flex flex-1 h-full overflow-hidden">
+      {/* Left sidebar - list of channels */}
       <div
         className={`${
           activeChat ? 'hidden lg:flex' : 'flex'
@@ -30,10 +31,12 @@ export default function Channels() {
         <ChatList chats={channels} />
       </div>
 
+      {/* Right side - chat view */}
       <div className={`${activeChat ? 'flex' : 'hidden lg:flex'} flex-1`}>
         <ChatView />
       </div>
 
+      {/* Create channel modal */}
       {isCreating && (
         <CreateModal type="channel" onClose={() => setIsCreating(false)} />
       )}

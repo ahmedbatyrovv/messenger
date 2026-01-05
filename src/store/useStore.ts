@@ -21,21 +21,22 @@ export interface Message {
 
 export interface Chat {
   id: string;
+  type: 'personal' | 'group' | 'channel';
   name: string;
   avatar: string;
-  type: 'personal' | 'group' | 'channel';
-  participants: string[];
+  participants: string[];        // ID пользователей
   messages: Message[];
   lastMessage?: Message;
   unreadCount: number;
-  isAdmin?: boolean;
+  adminId?: string;              // ID админа (для group и channel)
 }
 
 export interface Story {
   id: string;
   userId: string;
-  image: string;
+  imageUrl: string;
   timestamp: number;
+  expiresAt: number;
   views: string[];
 }
 
@@ -48,22 +49,33 @@ interface AppState {
   isMobileMenuOpen: boolean;
   isSidebarCollapsed: boolean;
 
+  // Действия
   setCurrentUser: (user: User | null) => void;
-  addUser: (user: User) => void;
   setActiveChat: (chatId: string | null) => void;
   addMessage: (chatId: string, message: Omit<Message, 'id'>) => void;
   receiveMessage: (chatId: string, message: Omit<Message, 'id'>) => void;
-  createChat: (chat: Omit<Chat, 'id' | 'messages' | 'unreadCount'>) => void;
+  createChat: (chat: Omit<Chat, 'id' | 'messages' | 'unreadCount'> & { adminId?: string }) => void;
   createStory: (story: Omit<Story, 'id' | 'views'>) => void;
   markStoryAsViewed: (storyId: string, userId: string) => void;
   markChatAsRead: (chatId: string) => void;
+  subscribeToChannel: (chatId: string) => void;
+  unsubscribeFromChannel: (chatId: string) => void;
   toggleMobileMenu: () => void;
   toggleSidebarCollapsed: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   logout: () => void;
 }
 
+// Мок-данные пользователей
 const MOCK_USERS: User[] = [
+  {
+    id: 'current',
+    username: 'you',
+    fullName: 'You',
+    avatar: 'https://i.pravatar.cc/150?img=32',
+    email: 'you@example.com',
+    isOnline: true,
+  },
   {
     id: '1',
     username: 'john_doe',
@@ -80,6 +92,22 @@ const MOCK_USERS: User[] = [
     email: 'jane@example.com',
     isOnline: true,
   },
+  {
+    id: '3',
+    username: 'alex_wilson',
+    fullName: 'Alex Wilson',
+    avatar: 'https://i.pravatar.cc/150?img=21',
+    email: 'alex@example.com',
+    isOnline: false,
+  },
+  {
+    id: '4',
+    username: 'maria_garcia',
+    fullName: 'Maria Garcia',
+    avatar: 'https://i.pravatar.cc/150?img=56',
+    email: 'maria@example.com',
+    isOnline: true,
+  },
 ];
 
 const MOCK_CHATS: Chat[] = [];
@@ -88,8 +116,9 @@ const MOCK_STORIES: Story[] = [];
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
+      // Начальное состояние
       users: MOCK_USERS,
-      currentUser: null,
+      currentUser: MOCK_USERS[0], // Ты — первый пользователь
       chats: MOCK_CHATS,
       stories: MOCK_STORIES,
       activeChat: null,
@@ -98,52 +127,45 @@ export const useStore = create<AppState>()(
 
       setCurrentUser: (user) => set({ currentUser: user }),
 
-      addUser: (newUser) =>
-        set((state) => {
-          const usernameLower = newUser.username.toLowerCase();
-          const emailLower = newUser.email.toLowerCase();
-          const exists = state.users.some(
-            (u) =>
-              u.username.toLowerCase() === usernameLower ||
-              u.email.toLowerCase() === emailLower
-          );
-          return exists ? state : { users: [...state.users, newUser] };
-        }),
-
       setActiveChat: (chatId) =>
         set({ activeChat: chatId, isMobileMenuOpen: false }),
 
+      // Отправка сообщения от текущего пользователя
       addMessage: (chatId, message) =>
         set((state) => {
-          const isOwn = message.senderId === state.currentUser?.id;
           const msgId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const newMessage = { ...message, id: msgId };
+
           return {
             chats: state.chats.map((chat) =>
               chat.id === chatId
                 ? {
                     ...chat,
-                    messages: [...chat.messages, { ...message, id: msgId }],
-                    lastMessage: { ...message, id: msgId },
-                    unreadCount: isOwn ? chat.unreadCount : chat.unreadCount + 1,
+                    messages: [...chat.messages, newMessage],
+                    lastMessage: newMessage,
+                    // Свои сообщения не увеличивают unreadCount
+                    unreadCount: chat.unreadCount,
                   }
                 : chat
             ),
           };
         }),
 
+      // Входящее сообщение (от других)
       receiveMessage: (chatId, message) =>
         set((state) => {
-          const isOwn = message.senderId === state.currentUser?.id;
           const isActive = state.activeChat === chatId;
+          const isOwn = message.senderId === state.currentUser?.id;
           const msgId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const newMessage = { ...message, id: msgId };
 
           return {
             chats: state.chats.map((chat) =>
               chat.id === chatId
                 ? {
                     ...chat,
-                    messages: [...chat.messages, { ...message, id: msgId }],
-                    lastMessage: { ...message, id: msgId },
+                    messages: [...chat.messages, newMessage],
+                    lastMessage: newMessage,
                     unreadCount: !isOwn && !isActive ? chat.unreadCount + 1 : chat.unreadCount,
                   }
                 : chat
@@ -151,25 +173,34 @@ export const useStore = create<AppState>()(
           };
         }),
 
+      // Создание чата/группы/канала
       createChat: (chat) =>
-        set((state) => ({
-          chats: [
-            {
-              ...chat,
-              id: `chat-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-              messages: [],
-              unreadCount: 0,
-            },
-            ...state.chats,
-          ],
-        })),
+        set((state) => {
+          const adminId = chat.type === 'personal' ? undefined : state.currentUser?.id || 'current';
 
+          const newChat: Chat = {
+            ...chat,
+            id: `chat-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            messages: [],
+            unreadCount: 0,
+            adminId,
+            participants: chat.type === 'channel' 
+              ? [adminId]  // в канале изначально только админ
+              : chat.participants.includes(adminId)
+              ? chat.participants
+              : [adminId, ...chat.participants],
+          };
+
+          return { chats: [newChat, ...state.chats] }; // новый наверх
+        }),
+
+      // Создание сторис
       createStory: (story) =>
         set((state) => ({
           stories: [
             {
               ...story,
-              id: `s-${Date.now()}`,
+              id: `story-${Date.now()}`,
               views: [],
             },
             ...state.stories,
@@ -192,6 +223,32 @@ export const useStore = create<AppState>()(
           ),
         })),
 
+      // Подписка на канал
+      subscribeToChannel: (chatId) =>
+        set((state) => {
+          const userId = state.currentUser?.id || 'current';
+          return {
+            chats: state.chats.map((chat) =>
+              chat.id === chatId && chat.type === 'channel' && !chat.participants.includes(userId)
+                ? { ...chat, participants: [...chat.participants, userId] }
+                : chat
+            ),
+          };
+        }),
+
+      // Отписка от канала
+      unsubscribeFromChannel: (chatId) =>
+        set((state) => {
+          const userId = state.currentUser?.id || 'current';
+          return {
+            chats: state.chats.map((chat) =>
+              chat.id === chatId && chat.type === 'channel' && chat.participants.includes(userId)
+                ? { ...chat, participants: chat.participants.filter((id) => id !== userId) }
+                : chat
+            ),
+          };
+        }),
+
       toggleMobileMenu: () =>
         set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),
 
@@ -212,7 +269,7 @@ export const useStore = create<AppState>()(
       partialize: (state) => ({
         currentUser: state.currentUser,
         isSidebarCollapsed: state.isSidebarCollapsed,
-        // chats: state.chats, // uncomment if you want offline persistence
+        // chats: state.chats, // раскомментируй, если хочешь сохранять чаты между сессиями
       }),
     }
   )

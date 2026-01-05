@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Upload } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,7 +16,7 @@ export default function CreateModal({ type, onClose }: CreateModalProps) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState('');
 
-  const availableUsers = users.filter((u) => u.id !== 'current');
+  const availableUsers = users.filter((u) => u.id !== currentUser?.id);
 
   const toggleUser = (userId: string) => {
     setSelectedUsers((prev) =>
@@ -29,46 +29,47 @@ export default function CreateModal({ type, onClose }: CreateModalProps) {
   const handleCreate = () => {
     if (type === 'story') {
       if (!imageUrl) return;
-
       createStory({
         userId: currentUser?.id || 'current',
         imageUrl,
         timestamp: Date.now(),
         expiresAt: Date.now() + 86400000,
       });
-
       onClose();
       navigate('/stories');
       return;
     }
 
-    if (!name || (type !== 'chat' && selectedUsers.length === 0)) return;
+    const adminId = currentUser?.id || 'current';
 
-    if (type === 'chat' && selectedUsers.length === 1) {
-      const user = users.find((u) => u.id === selectedUsers[0]);
-      if (user) {
-        createChat({
-          type: 'personal',
-          name: user.fullName,
-          avatar: user.avatar,
-          participants: ['current', user.id],
-        });
-      }
+    if (type === 'chat') {
+      if (selectedUsers.length !== 1) return;
+      const selectedUser = users.find((u) => u.id === selectedUsers[0]);
+      if (!selectedUser) return;
+
+      createChat({
+        type: 'personal',
+        name: selectedUser.fullName,
+        avatar: selectedUser.avatar,
+        participants: [adminId, selectedUser.id],
+      });
     } else if (type === 'group') {
+      if (!name || selectedUsers.length === 0) return;
       createChat({
         type: 'group',
         name,
         avatar: 'https://i.pravatar.cc/150?img=55',
-        participants: ['current', ...selectedUsers],
-        isAdmin: true,
+        participants: [adminId, ...selectedUsers],
+        adminId,
       });
     } else if (type === 'channel') {
+      if (!name) return;
       createChat({
         type: 'channel',
         name,
         avatar: 'https://i.pravatar.cc/150?img=70',
-        participants: ['current', 'admin'],
-        isAdmin: true,
+        participants: [adminId],
+        adminId,
       });
     }
 
@@ -78,14 +79,11 @@ export default function CreateModal({ type, onClose }: CreateModalProps) {
 
   const getTitle = () => {
     switch (type) {
-      case 'chat':
-        return 'New Chat';
-      case 'group':
-        return 'New Group';
-      case 'channel':
-        return 'New Channel';
-      case 'story':
-        return 'Create Story';
+      case 'chat': return 'New Chat';
+      case 'group': return 'New Group';
+      case 'channel': return 'New Channel';
+      case 'story': return 'Create Story';
+      default: return '';
     }
   };
 
@@ -117,21 +115,13 @@ export default function CreateModal({ type, onClose }: CreateModalProps) {
                   className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600"
                 />
               </div>
-
               {imageUrl && (
                 <div className="aspect-[9/16] rounded-lg overflow-hidden">
-                  <img
-                    src={imageUrl}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
                 </div>
               )}
-
               <div className="p-4 bg-zinc-800 rounded-lg">
-                <p className="text-sm text-zinc-400">
-                  Try these sample images:
-                </p>
+                <p className="text-sm text-zinc-400">Try these sample images:</p>
                 <div className="mt-2 space-y-1">
                   {[
                     'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
@@ -151,7 +141,7 @@ export default function CreateModal({ type, onClose }: CreateModalProps) {
             </div>
           ) : (
             <div className="space-y-4">
-              {type !== 'chat' && (
+              {(type === 'group' || type === 'channel') && (
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-2">
                     {type === 'channel' ? 'Channel Name' : 'Group Name'}
@@ -169,35 +159,39 @@ export default function CreateModal({ type, onClose }: CreateModalProps) {
               {type !== 'channel' && (
                 <div>
                   <label className="block text-sm font-medium text-zinc-400 mb-2">
-                    Select {type === 'chat' ? 'User' : 'Members'}
+                    {type === 'chat' ? 'Select a user' : 'Add members'}
                   </label>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {availableUsers.map((user) => (
-                      <button
-                        key={user.id}
-                        onClick={() => toggleUser(user.id)}
-                        className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                          selectedUsers.includes(user.id)
-                            ? 'bg-blue-600'
-                            : 'bg-zinc-800 hover:bg-zinc-750'
-                        }`}
-                      >
-                        <img
-                          src={user.avatar}
-                          alt={user.username}
-                          className="w-10 h-10 rounded-full"
-                        />
-                        <div className="flex-1 text-left">
-                          <p className="text-white font-medium">{user.fullName}</p>
-                          <p className="text-sm text-zinc-400">@{user.username}</p>
-                        </div>
-                        {selectedUsers.includes(user.id) && (
-                          <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                            <div className="w-2 h-2 bg-blue-600 rounded-full" />
+                    {availableUsers.length === 0 ? (
+                      <p className="text-zinc-500 text-center py-4">No users available</p>
+                    ) : (
+                      availableUsers.map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => toggleUser(user.id)}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors ${
+                            selectedUsers.includes(user.id)
+                              ? 'bg-blue-600'
+                              : 'bg-zinc-800 hover:bg-zinc-750'
+                          }`}
+                        >
+                          <img
+                            src={user.avatar}
+                            alt={user.username}
+                            className="w-10 h-10 rounded-full"
+                          />
+                          <div className="flex-1 text-left">
+                            <p className="text-white font-medium">{user.fullName}</p>
+                            <p className="text-sm text-zinc-400">@{user.username}</p>
                           </div>
-                        )}
-                      </button>
-                    ))}
+                          {selectedUsers.includes(user.id) && (
+                            <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                              <div className="w-3 h-3 bg-blue-600 rounded-full" />
+                            </div>
+                          )}
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -213,7 +207,9 @@ export default function CreateModal({ type, onClose }: CreateModalProps) {
                 ? !imageUrl
                 : type === 'chat'
                 ? selectedUsers.length !== 1
-                : !name || (type !== 'channel' && selectedUsers.length === 0)
+                : type === 'channel'
+                ? !name
+                : !name || selectedUsers.length === 0
             }
             className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
           >

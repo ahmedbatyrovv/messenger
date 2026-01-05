@@ -2,10 +2,22 @@ import { useState, useRef, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { Send, ArrowLeft, Phone, Video, Info } from 'lucide-react';
 import { formatTime } from '../utils/time';
+import ChatInfoModal from './ChatInfoModal';
 
 export default function ChatView() {
-  const { activeChat, chats, users, addMessage, setActiveChat, markChatAsRead } = useStore();
+  const {
+    activeChat,
+    chats,
+    users,
+    currentUser,
+    addMessage,
+    setActiveChat,
+    markChatAsRead,
+    subscribeToChannel,
+  } = useStore();
+
   const [message, setMessage] = useState('');
+  const [showInfo, setShowInfo] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const chat = chats.find((c) => c.id === activeChat);
@@ -18,7 +30,7 @@ export default function ChatView() {
     if (chat && chat.unreadCount > 0) {
       markChatAsRead(chat.id);
     }
-  }, [chat?.id]);
+  }, [chat?.id, chat?.unreadCount, markChatAsRead]);
 
   if (!chat) {
     return (
@@ -35,31 +47,40 @@ export default function ChatView() {
 
   const handleSend = () => {
     if (!message.trim()) return;
-    if (chat.type === 'channel' && !chat.isAdmin) return;
+
+    const isAdmin = chat.adminId === currentUser?.id;
+    const isChannel = chat.type === 'channel';
+
+    if (isChannel && !isAdmin) return;
 
     addMessage(chat.id, {
-      senderId: 'current',
+      senderId: currentUser?.id || 'current',
       content: message.trim(),
       timestamp: Date.now(),
-      isRead: false,
     });
     setMessage('');
   };
 
   const getSenderInfo = (senderId: string) => {
-    if (senderId === 'current') {
-      return { name: 'You', avatar: useStore.getState().currentUser?.avatar };
+    if (senderId === currentUser?.id || senderId === 'current') {
+      return { name: 'You', avatar: currentUser?.avatar || '' };
     }
     const user = users.find((u) => u.id === senderId);
-    return { name: user?.fullName || 'Unknown', avatar: user?.avatar };
+    return { name: user?.fullName || 'Unknown', avatar: user?.avatar || '' };
   };
 
   const isChannel = chat.type === 'channel';
-  const canSendMessage = !isChannel || chat.isAdmin;
+  const isAdmin = chat.adminId === currentUser?.id;
+  const isSubscribed = chat.participants.includes(currentUser?.id || 'current');
+  const canSendMessage = !isChannel || isAdmin;
+
+  const handleSubscribe = () => {
+    subscribeToChannel(chat.id);
+  };
 
   return (
     <div className="flex-1 flex flex-col bg-black">
-      {/* Хедер чата — плотно, без лишних отступов */}
+      {/* Header */}
       <div className="border-b border-zinc-900 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -72,7 +93,9 @@ export default function ChatView() {
           <div className="min-w-0">
             <h2 className="font-semibold text-white truncate">{chat.name}</h2>
             <p className="text-xs text-zinc-500">
-              {chat.type === 'personal' ? 'Active now' : `${chat.participants.length} members`}
+              {chat.type === 'personal'
+                ? 'Active now'
+                : `${chat.participants.length} member${chat.participants.length !== 1 ? 's' : ''}`}
             </p>
           </div>
         </div>
@@ -87,17 +110,20 @@ export default function ChatView() {
               </button>
             </>
           )}
-          <button className="text-zinc-400 hover:text-white transition-colors">
+          <button
+            onClick={() => setShowInfo(true)}
+            className="text-zinc-400 hover:text-white transition-colors"
+          >
             <Info className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* Сообщения — начинаются сразу под хедером, минимум отступов */}
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 pt-3 pb-2 space-y-4">
         {chat.messages.map((msg) => {
           const sender = getSenderInfo(msg.senderId);
-          const isOwn = msg.senderId === 'current';
+          const isOwn = msg.senderId === currentUser?.id || msg.senderId === 'current';
 
           return (
             <div
@@ -134,9 +160,16 @@ export default function ChatView() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Нижняя панель ввода */}
+      {/* Input area */}
       <div className="border-t border-zinc-900 p-4">
-        {canSendMessage ? (
+        {isChannel && !isSubscribed ? (
+          <button
+            onClick={handleSubscribe}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+          >
+            Subscribe to Channel
+          </button>
+        ) : canSendMessage ? (
           <div className="flex items-center gap-3">
             <input
               type="text"
@@ -160,6 +193,9 @@ export default function ChatView() {
           </div>
         )}
       </div>
+
+      {/* Info Modal */}
+      {showInfo && <ChatInfoModal chat={chat} onClose={() => setShowInfo(false)} />}
     </div>
   );
 }
