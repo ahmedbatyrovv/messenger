@@ -1,4 +1,3 @@
-// src/components/Navigation.tsx
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import {
@@ -26,7 +25,6 @@ export default function Navigation() {
     toggleSidebarCollapsed,
   } = useStore();
 
-  // 5 основных мобильных табов
   const bottomTabs = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: MessageCircle, label: 'Chats', path: '/chats' },
@@ -35,7 +33,6 @@ export default function Navigation() {
     { icon: User, label: 'Profile', path: '/profile' },
   ];
 
-  // Пункты десктопного сайдбара
   const sidebarItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: SearchIcon, label: 'Search', path: '/search' },
@@ -48,30 +45,30 @@ export default function Navigation() {
 
   const handleNavClick = (path: string) => {
     navigate(path);
-    if (activeChat && (path === '/chats' || path === '/groups' || path === '/channels')) {
+    if (activeChat) {
       setActiveChat(null);
     }
   };
 
   const isActive = (path: string) => location.pathname === path;
 
+  // Если чат открыт — ничего не рендерим на мобильных
+  if (activeChat) {
+    return null;
+  }
+
   return (
     <>
-      {/* ==================== MOBILE: Top Bar (Create — Messenger — Search) ==================== */}
+      {/* MOBILE: Top Bar — скрывается при открытом чате */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-zinc-900 lg:hidden">
         <div className="flex items-center justify-between h-14 px-4">
-          {/* Create */}
           <button
             onClick={() => handleNavClick('/create')}
             className="p-2 rounded-lg hover:bg-zinc-800 transition-colors"
           >
             <Plus className="w-6 h-6 text-zinc-400 hover:text-white" />
           </button>
-
-          {/* Название приложения */}
           <h1 className="text-xl font-bold text-white">Messenger</h1>
-
-          {/* Search */}
           <button
             onClick={() => handleNavClick('/search')}
             className="p-2 rounded-lg hover:bg-zinc-800 transition-colors"
@@ -81,7 +78,7 @@ export default function Navigation() {
         </div>
       </div>
 
-      {/* ==================== MOBILE: Bottom Tab Bar (5 табов) ==================== */}
+      {/* MOBILE: Bottom Tab Bar — скрывается при открытом чате */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-zinc-900 lg:hidden">
         <div className="flex justify-around items-center h-16">
           {bottomTabs.map((item) => {
@@ -103,7 +100,7 @@ export default function Navigation() {
         </div>
       </div>
 
-      {/* ==================== DESKTOP: Collapsible Left Sidebar ==================== */}
+      {/* DESKTOP: Sidebar — остаётся всегда */}
       <aside
         className={`
           hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:bg-black lg:border-r lg:border-zinc-900
@@ -112,7 +109,6 @@ export default function Navigation() {
         `}
       >
         <div className="flex flex-col h-full">
-          {/* Профиль + кнопка коллапса */}
           <div className="p-6 border-b border-zinc-900 flex items-center justify-between">
             {!isSidebarCollapsed && (
               <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -131,7 +127,6 @@ export default function Navigation() {
                 </div>
               </div>
             )}
-
             <button
               onClick={toggleSidebarCollapsed}
               className="p-2 rounded-lg hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-white flex-shrink-0"
@@ -140,7 +135,6 @@ export default function Navigation() {
             </button>
           </div>
 
-          {/* Навигация */}
           <nav className="flex-1 py-6 overflow-hidden">
             <div className={isSidebarCollapsed ? 'px-3 space-y-2' : 'px-3 space-y-1'}>
               {sidebarItems.map((item) => {
@@ -152,19 +146,12 @@ export default function Navigation() {
                     onClick={() => handleNavClick(item.path)}
                     className={`
                       group relative w-full flex items-center rounded-lg transition-all duration-200
-                      ${isSidebarCollapsed 
-                        ? 'justify-center py-4 hover:bg-zinc-800' 
-                        : 'gap-4 px-4 py-3'
-                      }
-                      ${active 
-                        ? 'bg-zinc-800 text-white font-medium' 
-                        : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'
-                      }
+                      ${isSidebarCollapsed ? 'justify-center py-4 hover:bg-zinc-800' : 'gap-4 px-4 py-3'}
+                      ${active ? 'bg-zinc-800 text-white font-medium' : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'}
                     `}
                   >
                     <Icon className="w-6 h-6 flex-shrink-0" />
                     {!isSidebarCollapsed && <span className="text-base">{item.label}</span>}
-
                     {isSidebarCollapsed && (
                       <div className="absolute left-full ml-4 px-4 py-2 bg-zinc-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 shadow-lg">
                         {item.label}
@@ -176,21 +163,16 @@ export default function Navigation() {
             </div>
           </nav>
 
-          {/* Logout */}
           <div className="border-t border-zinc-900 p-4 pb-6">
             <button
               onClick={logout}
               className={`
                 group relative w-full flex items-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-red-400 transition-all duration-200
-                ${isSidebarCollapsed 
-                  ? 'justify-center py-4 hover:bg-zinc-800' 
-                  : 'gap-4 px-4 py-3'
-                }
+                ${isSidebarCollapsed ? 'justify-center py-4 hover:bg-zinc-800' : 'gap-4 px-4 py-3'}
               `}
             >
               <LogOut className="w-6 h-6 flex-shrink-0" />
               {!isSidebarCollapsed && <span className="font-medium">Log Out</span>}
-
               {isSidebarCollapsed && (
                 <div className="absolute left-full ml-4 px-4 py-2 bg-zinc-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 shadow-lg">
                   Log Out

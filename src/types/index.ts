@@ -14,7 +14,6 @@ export interface Message {
   timestamp: number;
   isRead: boolean;
 }
-
 export interface Chat {
   id: string;
   type: 'personal' | 'group' | 'channel';
@@ -24,7 +23,8 @@ export interface Chat {
   messages: Message[];
   lastMessage?: Message;
   unreadCount: number;
-  isAdmin?: boolean;
+  adminId?: string;
+  description?: string;  // ← новое поле для описания (особенно для каналов)
 }
 
 export interface Story {

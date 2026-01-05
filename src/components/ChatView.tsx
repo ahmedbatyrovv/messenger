@@ -30,27 +30,16 @@ export default function ChatView() {
     if (chat && chat.unreadCount > 0) {
       markChatAsRead(chat.id);
     }
-  }, [chat?.id, chat?.unreadCount, markChatAsRead]);
+  }, [chat?.id]);
 
   if (!chat) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-black">
-        <div className="text-center px-6">
-          <p className="text-xl text-zinc-400 mb-2">Select a chat to start messaging</p>
-          <p className="text-sm text-zinc-600">
-            Choose from your existing conversations or start a new one
-          </p>
-        </div>
-      </div>
-    );
+    return null; // Navigation сам скрывается
   }
 
   const handleSend = () => {
     if (!message.trim()) return;
-
     const isAdmin = chat.adminId === currentUser?.id;
     const isChannel = chat.type === 'channel';
-
     if (isChannel && !isAdmin) return;
 
     addMessage(chat.id, {
@@ -79,13 +68,13 @@ export default function ChatView() {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-black">
-      {/* Header */}
-      <div className="border-b border-zinc-900 px-4 py-3 flex items-center justify-between">
+    <div className="fixed inset-0 z-40 flex flex-col bg-black lg:relative lg:inset-auto lg:z-auto">
+      {/* Header чата — всегда сверху */}
+      <div className="bg-black border-b border-zinc-900 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setActiveChat(null)}
-            className="lg:hidden text-zinc-400 hover:text-white"
+            className="text-zinc-400 hover:text-white"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
@@ -119,17 +108,13 @@ export default function ChatView() {
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Сообщения */}
       <div className="flex-1 overflow-y-auto px-4 pt-3 pb-2 space-y-4">
         {chat.messages.map((msg) => {
           const sender = getSenderInfo(msg.senderId);
           const isOwn = msg.senderId === currentUser?.id || msg.senderId === 'current';
-
           return (
-            <div
-              key={msg.id}
-              className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}
-            >
+            <div key={msg.id} className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
               {!isOwn && (
                 <img
                   src={sender.avatar}
@@ -139,9 +124,7 @@ export default function ChatView() {
               )}
               <div className={`flex flex-col ${isOwn ? 'items-end' : ''}`}>
                 {!isOwn && chat.type !== 'personal' && (
-                  <span className="text-xs text-zinc-500 mb-1 px-1">
-                    {sender.name}
-                  </span>
+                  <span className="text-xs text-zinc-500 mb-1 px-1">{sender.name}</span>
                 )}
                 <div
                   className={`max-w-xs sm:max-w-md px-4 py-2 rounded-2xl ${
@@ -160,8 +143,8 @@ export default function ChatView() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
-      <div className="border-t border-zinc-900 p-4">
+      {/* Input */}
+      <div className="border-t border-zinc-900 p-4 bg-black">
         {isChannel && !isSubscribed ? (
           <button
             onClick={handleSubscribe}
@@ -194,7 +177,6 @@ export default function ChatView() {
         )}
       </div>
 
-      {/* Info Modal */}
       {showInfo && <ChatInfoModal chat={chat} onClose={() => setShowInfo(false)} />}
     </div>
   );
