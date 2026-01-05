@@ -1,6 +1,6 @@
+// src/store/useStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, Chat, Story, Message } from '../types';
 
 export interface User {
   id: string;
@@ -9,6 +9,34 @@ export interface User {
   avatar: string;
   email: string;
   isOnline?: boolean;
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: number;
+  isRead?: boolean;
+}
+
+export interface Chat {
+  id: string;
+  name: string;
+  avatar: string;
+  type: 'personal' | 'group' | 'channel';
+  participants: string[];
+  messages: Message[];
+  lastMessage?: Message;
+  unreadCount: number;
+  isAdmin?: boolean;
+}
+
+export interface Story {
+  id: string;
+  userId: string;
+  image: string;
+  timestamp: number;
+  views: string[];
 }
 
 interface AppState {
@@ -24,6 +52,7 @@ interface AppState {
   addUser: (user: User) => void;
   setActiveChat: (chatId: string | null) => void;
   addMessage: (chatId: string, message: Omit<Message, 'id'>) => void;
+  receiveMessage: (chatId: string, message: Omit<Message, 'id'>) => void;
   createChat: (chat: Omit<Chat, 'id' | 'messages' | 'unreadCount'>) => void;
   createStory: (story: Omit<Story, 'id' | 'views'>) => void;
   markStoryAsViewed: (storyId: string, userId: string) => void;
@@ -58,7 +87,7 @@ const MOCK_STORIES: Story[] = [];
 
 export const useStore = create<AppState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       users: MOCK_USERS,
       currentUser: null,
       chats: MOCK_CHATS,
@@ -78,36 +107,56 @@ export const useStore = create<AppState>()(
               u.username.toLowerCase() === usernameLower ||
               u.email.toLowerCase() === emailLower
           );
-          if (exists) return state;
-          return { users: [...state.users, newUser] };
+          return exists ? state : { users: [...state.users, newUser] };
         }),
 
       setActiveChat: (chatId) =>
         set({ activeChat: chatId, isMobileMenuOpen: false }),
 
       addMessage: (chatId, message) =>
-        set((state) => ({
-          chats: state.chats.map((chat) =>
-            chat.id === chatId
-              ? {
-                  ...chat,
-                  messages: [
-                    ...chat.messages,
-                    { ...message, id: `m${Date.now()}` },
-                  ],
-                  lastMessage: { ...message, id: `m${Date.now()}` },
-                  unreadCount: chat.unreadCount + 1,
-                }
-              : chat
-          ),
-        })),
+        set((state) => {
+          const isOwn = message.senderId === state.currentUser?.id;
+          const msgId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          return {
+            chats: state.chats.map((chat) =>
+              chat.id === chatId
+                ? {
+                    ...chat,
+                    messages: [...chat.messages, { ...message, id: msgId }],
+                    lastMessage: { ...message, id: msgId },
+                    unreadCount: isOwn ? chat.unreadCount : chat.unreadCount + 1,
+                  }
+                : chat
+            ),
+          };
+        }),
+
+      receiveMessage: (chatId, message) =>
+        set((state) => {
+          const isOwn = message.senderId === state.currentUser?.id;
+          const isActive = state.activeChat === chatId;
+          const msgId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+          return {
+            chats: state.chats.map((chat) =>
+              chat.id === chatId
+                ? {
+                    ...chat,
+                    messages: [...chat.messages, { ...message, id: msgId }],
+                    lastMessage: { ...message, id: msgId },
+                    unreadCount: !isOwn && !isActive ? chat.unreadCount + 1 : chat.unreadCount,
+                  }
+                : chat
+            ),
+          };
+        }),
 
       createChat: (chat) =>
         set((state) => ({
           chats: [
             {
               ...chat,
-              id: `chat${Date.now()}`,
+              id: `chat-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
               messages: [],
               unreadCount: 0,
             },
@@ -120,7 +169,7 @@ export const useStore = create<AppState>()(
           stories: [
             {
               ...story,
-              id: `s${Date.now()}`,
+              id: `s-${Date.now()}`,
               views: [],
             },
             ...state.stories,
@@ -149,25 +198,21 @@ export const useStore = create<AppState>()(
       toggleSidebarCollapsed: () =>
         set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
 
-      setSidebarCollapsed: (collapsed) =>
-        set({ isSidebarCollapsed: collapsed }),
+      setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
 
       logout: () =>
         set({
           currentUser: null,
           activeChat: null,
           isMobileMenuOpen: false,
-          isSidebarCollapsed: false,
         }),
     }),
     {
       name: 'messenger-storage',
       partialize: (state) => ({
-        users: state.users,
         currentUser: state.currentUser,
-        chats: state.chats,
-        stories: state.stories,
         isSidebarCollapsed: state.isSidebarCollapsed,
+        // chats: state.chats, // uncomment if you want offline persistence
       }),
     }
   )

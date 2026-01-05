@@ -1,5 +1,6 @@
+// src/layouts/Layout.tsx
 import { Outlet } from 'react-router-dom';
-import Navigation from '../components/Navigation';
+import Navigation from './Navigation';
 import { useStore } from '../store/useStore';
 
 export default function Layout() {
@@ -12,15 +13,12 @@ export default function Layout() {
       <div
         className={`
           flex-1 flex flex-col overflow-hidden
-          pb-20 lg:pb-0
-          transition-all duration-300
+          transition-all duration-300 ease-in-out
+          pt-14 pb-16 lg:pt-0 lg:pb-0  /* отступы под мобильные бары */
           ${isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}
         `}
       >
-     <main className="flex-1 pb-20 lg:pb-0 lg:ml-20">
-  {/* lg:ml-20 вместо lg:ml-72 */}
-  <Outlet />
-</main>
+        <Outlet />
       </div>
     </div>
   );
